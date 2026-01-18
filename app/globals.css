@@ -1,0 +1,357 @@
+@import "@gouvfr/dsfr/dist/dsfr/dsfr.min.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --blue-france-main: #000091;
+  --blue-france-113: #000091;
+  --blue-france-200: #6a6af4;
+  --grey-950: #f6f6f6;
+  --grey-925: #eeeeee;
+  --grey-200: #cecece;
+}
+
+body {
+  font-family: "Marianne", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #161616;
+  background-color: #ffffff;
+}
+
+/* Styles DSFR personnalisés pour correspondre exactement au style .gouv.fr */
+.fr-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.fr-header__service {
+  font-weight: 700;
+}
+
+/* Masquer le logo Marianne pour les publicités */
+.fr-header__brand::before {
+  display: none !important;
+}
+
+.fr-header__brand {
+  padding-left: 0 !important;
+}
+
+
+/* Espacements larges pour lisibilité maximale */
+.section-spacing {
+  padding: 2rem 0;
+}
+
+@media (min-width: 768px) {
+  .section-spacing {
+    padding: 3rem 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .section-spacing {
+    padding: 4rem 0;
+  }
+}
+
+/* Cards sobres avec bordures légères */
+.card-dsfr {
+  border: 1px solid var(--grey-200);
+  border-radius: 4px;
+  background-color: #ffffff;
+  padding: 1rem;
+  height: 100%;
+  transition: box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .card-dsfr {
+    padding: 1.5rem;
+  }
+}
+
+.card-dsfr:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Formulaire accessible */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-error {
+  color: #ce0500;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+/* Amélioration accessibilité - focus visible */
+*:focus-visible {
+  outline: 2px solid var(--blue-france-main);
+  outline-offset: 2px;
+}
+
+/* Scroll smooth pour navigation ancres */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Améliorations responsive */
+@media (max-width: 767px) {
+  /* Réduction des espacements sur mobile */
+  .fr-h1 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+  
+  .fr-h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+  
+  /* Boutons pleine largeur sur mobile */
+  .fr-btns-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .fr-btns-group .fr-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .fr-btns-group .fr-btn:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Header responsive */
+  .fr-header__service-title {
+    font-size: 0.875rem;
+  }
+}
+
+/* Stepper - correction pour éviter le chevauchement de texte */
+.fr-stepper__step {
+  position: relative;
+  overflow: visible;
+}
+
+.fr-stepper__title {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: ellipsis;
+}
+
+/* Sur mobile, permettre le retour à la ligne si nécessaire */
+@media (max-width: 767px) {
+  .fr-stepper__title {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+/* Amélioration des champs de formulaire sur mobile */
+@media (max-width: 767px) {
+  .fr-input-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .fr-fieldset {
+    margin-bottom: 1.25rem;
+  }
+  
+  .fr-radio-group {
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Amélioration du focus pour mobile */
+@media (max-width: 767px) {
+  *:focus-visible {
+    outline-width: 3px;
+  }
+  
+  /* Amélioration de la lisibilité sur mobile */
+  .fr-text--lead {
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+  
+  /* Espacement des sections sur mobile */
+  .fr-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Correction du viewport pour mobile */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Amélioration de la performance de scroll */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Styles pour les logos officiels */
+.logo-container {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.logo-container:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: #cecece;
+}
+
+.logo-container img {
+  filter: brightness(1);
+  transition: filter 0.2s ease;
+}
+
+.logo-container:hover img {
+  filter: brightness(0.95);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Optimisation mobile pour le formulaire */
+@media (max-width: 767px) {
+  /* Masquer le menu sur mobile quand on est sur le formulaire */
+  .mobile-menu-hidden {
+    display: none !important;
+  }
+  
+  /* Réduire le header sur mobile */
+  .fr-header__body {
+    padding: 0.5rem 0;
+  }
+  
+  .fr-header__service-title {
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+  
+  /* Optimisation du formulaire mobile */
+  .form-section-mobile {
+    padding: 1rem 0;
+    margin-top: -1rem;
+  }
+  
+  .form-mobile-optimized .fr-input-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-mobile-optimized .fr-input {
+    font-size: 16px; /* Évite le zoom automatique sur iOS */
+    padding: 0.75rem;
+    min-height: 44px; /* Taille minimale pour le touch */
+  }
+  
+  .form-mobile-optimized .fr-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-mobile-optimized .fr-hint-text {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+  
+  .form-mobile-optimized .fr-alert {
+    padding: 1rem;
+    font-size: 0.875rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    position: relative;
+    padding-left: 3.5rem !important; /* Espace pour l'icône + marge */
+  }
+  
+  .form-mobile-optimized .fr-alert::before {
+    left: 0.1rem !important;
+    top: 1rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+  
+  .form-mobile-optimized .fr-alert__title {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal !important;
+    line-height: 1.4;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+    margin-top: 0 !important;
+  }
+  
+  .form-mobile-optimized .fr-alert > p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .form-mobile-optimized .fr-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  
+  /* Réduire les espacements sur mobile */
+  .form-mobile-optimized .fr-mt-3w {
+    margin-top: 1rem !important;
+  }
+  
+  .form-mobile-optimized .fr-mt-4w {
+    margin-top: 1.25rem !important;
+  }
+  
+  .form-mobile-optimized .fr-mt-5w {
+    margin-top: 1.5rem !important;
+  }
+  
+  /* Assurer que le formulaire prend toute la largeur */
+  #formulaire-eligibilite .fr-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Scroll automatique vers le formulaire au chargement */
+  #formulaire-eligibilite {
+    scroll-margin-top: 0;
+  }
+}
+
+/* Amélioration pour très petits écrans */
+@media (max-width: 374px) {
+  .form-mobile-optimized .fr-input {
+    font-size: 16px;
+    padding: 0.625rem;
+  }
+  
+  .form-mobile-optimized .fr-label {
+    font-size: 0.8125rem;
+  }
+}
+

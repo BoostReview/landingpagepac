@@ -1,0 +1,111 @@
+import { NextRequest, NextResponse } from "next/server";
+
+interface LeadFormData {
+  nomComplet: string;
+  telephone: string;
+  codePostal: string;
+  adresse: string;
+  email?: string;
+  leadId?: string;
+  otpVerified?: boolean;
+  otpStatus?: "pending" | "verified";
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body: LeadFormData = await request.json();
+
+    // Validation nom complet
+    if (!body.nomComplet || body.nomComplet.trim().length < 3) {
+      return NextResponse.json(
+        { error: "Le nom et prénom doivent contenir au moins 3 caractères." },
+        { status: 400 }
+      );
+    }
+
+    // Validation téléphone
+    if (!body.telephone) {
+      return NextResponse.json(
+        { error: "Le numéro de téléphone est obligatoire." },
+        { status: 400 }
+      );
+    }
+
+    // Nettoyer le téléphone (enlever les espaces)
+    const telephoneCleaned = body.telephone.replace(/\s/g, "");
+    
+    // Validation téléphone : 10 chiffres
+    if (!/^0[1-9]\d{8}$/.test(telephoneCleaned)) {
+      return NextResponse.json(
+        { error: "Veuillez saisir un numéro de téléphone valide (10 chiffres)." },
+        { status: 400 }
+      );
+    }
+
+    // Validation code postal
+    if (!body.codePostal) {
+      return NextResponse.json(
+        { error: "Le code postal est obligatoire." },
+        { status: 400 }
+      );
+    }
+
+    if (!/^\d{5}$/.test(body.codePostal)) {
+      return NextResponse.json(
+        { error: "Le code postal doit contenir 5 chiffres." },
+        { status: 400 }
+      );
+    }
+
+    // Validation adresse
+    if (!body.adresse || body.adresse.trim().length < 5) {
+      return NextResponse.json(
+        { error: "L'adresse doit contenir au moins 5 caractères." },
+        { status: 400 }
+      );
+    }
+
+    // Validation email si fourni
+    if (body.email && body.email.trim() !== "") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(body.email)) {
+        return NextResponse.json(
+          { error: "Veuillez saisir une adresse email valide." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Ici, vous pouvez ajouter la logique pour sauvegarder les données
+    // Par exemple : envoi à un CRM, base de données, email, etc.
+    
+    console.log("Lead reçu:", {
+      leadId: body.leadId || "",
+      nomComplet: body.nomComplet.trim(),
+      telephone: telephoneCleaned,
+      codePostal: body.codePostal,
+      adresse: body.adresse.trim(),
+      email: body.email?.trim() || "",
+      otpVerified: body.otpVerified === true,
+      otpStatus: body.otpStatus || "",
+      date: new Date().toISOString(),
+    });
+
+    // Réponse de succès
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Votre demande a été enregistrée avec succès.",
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Erreur lors du traitement de la demande:", error);
+    return NextResponse.json(
+      {
+        error: "Une erreur est survenue lors du traitement de votre demande.",
+      },
+      { status: 500 }
+    );
+  }
+}
