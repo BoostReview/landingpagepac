@@ -40,7 +40,7 @@ export default function LogosSection() {
                       onError={(e) => {
                         const target = e.currentTarget;
                         target.style.display = "none";
-                        const fallback = target.nextElementSibling;
+                        const fallback = target.nextElementSibling as HTMLElement | null;
                         if (fallback) {
                           fallback.classList.remove("hidden");
                           fallback.style.display = "block";
@@ -86,7 +86,7 @@ export default function LogosSection() {
                       onError={(e) => {
                         const target = e.currentTarget;
                         target.style.display = "none";
-                        const fallback = target.nextElementSibling;
+                        const fallback = target.nextElementSibling as HTMLElement | null;
                         if (fallback) {
                           fallback.classList.remove("hidden");
                           fallback.style.display = "block";
@@ -136,7 +136,7 @@ export default function LogosSection() {
                         target.style.display = "none";
                         const parent = target.parentElement;
                         if (parent) {
-                          const fallback = parent.querySelector('.rge-fallback-text');
+                          const fallback = parent.querySelector(".rge-fallback-text") as HTMLElement | null;
                           if (fallback) {
                             fallback.classList.remove("hidden");
                             fallback.style.display = "block";
@@ -186,7 +186,7 @@ export default function LogosSection() {
                       onError={(e) => {
                         const target = e.currentTarget;
                         target.style.display = "none";
-                        const fallback = target.nextElementSibling;
+                        const fallback = target.nextElementSibling as HTMLElement | null;
                         if (fallback) {
                           fallback.classList.remove("hidden");
                           fallback.style.display = "block";
