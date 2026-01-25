@@ -162,7 +162,14 @@ export default function LeadForm({ travaux }: LeadFormProps) {
   }, [formData.codePostal]);
 
   const formatPhoneNumber = (value: string): string => {
-    const cleaned = value.replace(/\D/g, "");
+    let cleaned = value.replace(/\D/g, "");
+
+    if (cleaned.startsWith("0033")) {
+      cleaned = `0${cleaned.slice(4)}`;
+    } else if (cleaned.startsWith("33") && cleaned.length >= 11) {
+      cleaned = `0${cleaned.slice(2)}`;
+    }
+
     const limited = cleaned.slice(0, 10);
     
     if (limited.length === 0) return "";
