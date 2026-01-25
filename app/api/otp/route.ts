@@ -152,17 +152,9 @@ export async function PUT(request: NextRequest) {
     // Nettoyer les codes expirés
     cleanExpiredOTPs();
 
-    // Vérifier si une vérification existe
+    // Si on a une entrée locale, vérifier l'expiration (mais ne pas bloquer si absent)
     const stored = otpStore.get(telephoneCleaned);
-
-    if (!stored) {
-      return NextResponse.json(
-        { error: "Code OTP invalide ou expiré." },
-        { status: 400 }
-      );
-    }
-
-    if (stored.expiresAt < Date.now()) {
+    if (stored && stored.expiresAt < Date.now()) {
       otpStore.delete(telephoneCleaned);
       return NextResponse.json(
         { error: "Code OTP expiré. Veuillez en demander un nouveau." },
@@ -185,7 +177,7 @@ export async function PUT(request: NextRequest) {
           },
           body: JSON.stringify({
             to: phoneInternational,
-            code: code,
+            code: String(code).trim(),
           }),
         }
       );
