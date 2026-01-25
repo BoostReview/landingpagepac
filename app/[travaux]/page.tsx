@@ -8,8 +8,9 @@ import ConfianceSection from "@/components/ConfianceSection";
 import Footer from "@/components/Footer";
 import { getCampaign } from "@/lib/campaigns";
 
-export default function Home() {
-  const content = getCampaign("renovation");
+export default function TravauxPage({ params }: { params: { travaux: string } }) {
+  const content = getCampaign(params.travaux);
+
   return (
     <>
       <Header />
@@ -25,4 +26,3 @@ export default function Home() {
     </>
   );
 }
-

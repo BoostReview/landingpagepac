@@ -1,12 +1,17 @@
-export default function AidesSection() {
+type AidesSectionProps = {
+  title: string;
+  lead: string;
+};
+
+export default function AidesSection({ title, lead }: AidesSectionProps) {
   return (
     <section className="section-spacing" id="aides-energie" style={{ backgroundColor: "#f6f6f6" }}>
       <div className="fr-container">
         <div className="fr-grid-row fr-grid-row--center">
           <div className="fr-col-12">
-            <h2 className="fr-h2 fr-text--center fr-mb-3w">Quelles aides sont disponibles ?</h2>
+            <h2 className="fr-h2 fr-text--center fr-mb-3w">{title}</h2>
             <p className="fr-text fr-text--center fr-mt-3w fr-mb-4w fr-mb-md-5w">
-              Plusieurs dispositifs d'aides publiques peuvent vous accompagner dans votre projet d'installation d'une pompe à chaleur.
+              {lead}
             </p>
           </div>
         </div>

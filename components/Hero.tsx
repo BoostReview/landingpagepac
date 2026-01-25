@@ -1,6 +1,11 @@
 "use client";
 
-export default function Hero() {
+type HeroProps = {
+  title: string;
+  lead: string;
+};
+
+export default function Hero({ title, lead }: HeroProps) {
   const scrollToForm = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     const formElement = document.getElementById("formulaire-eligibilite");
@@ -18,12 +23,8 @@ export default function Hero() {
       <div className="fr-container">
         <div className="fr-grid-row fr-grid-row--center">
           <div className="fr-col-12 fr-col-md-10 fr-col-lg-8">
-            <h1 className="fr-h1 fr-mb-2w">
-              Vérifier votre éligibilité aux aides pour l'installation d'une pompe à chaleur
-            </h1>
-            <p className="fr-text--lead fr-mt-3w fr-mb-4w">
-              Dans le cadre de la transition énergétique, des dispositifs d'aides publiques sont disponibles pour vous accompagner dans l'installation d'une pompe à chaleur. Vérifiez votre éligibilité en quelques minutes.
-            </p>
+            <h1 className="fr-h1 fr-mb-2w">{title}</h1>
+            <p className="fr-text--lead fr-mt-3w fr-mb-4w">{lead}</p>
             <div className="fr-mt-4w fr-mt-md-5w">
               <a
                 href="#formulaire-eligibilite"

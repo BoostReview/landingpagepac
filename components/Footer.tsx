@@ -1,14 +1,16 @@
 import Link from "next/link";
 
-export default function Footer() {
+type FooterProps = {
+  description: string;
+};
+
+export default function Footer({ description }: FooterProps) {
   return (
     <footer className="fr-footer" role="contentinfo" id="footer">
       <div className="fr-container">
         <div className="fr-footer__body">
           <div className="fr-footer__content">
-            <p className="fr-footer__content-desc">
-              Information sur les aides à la rénovation énergétique et l'installation de pompe à chaleur.
-            </p>
+            <p className="fr-footer__content-desc">{description}</p>
             <ul className="fr-footer__content-list">
               <li className="fr-footer__content-item">
                 <Link className="fr-footer__content-link" href="#accessibilite">

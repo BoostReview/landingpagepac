@@ -8,6 +8,7 @@ interface LeadFormData {
   codePostal: string;
   adresse: string;
   email?: string;
+  travaux?: "pac" | "ite" | "fenetres" | "solaire" | "renovation";
   leadId?: string;
   otpVerified?: boolean;
   otpStatus?: "pending" | "verified";
@@ -21,6 +22,17 @@ export async function POST(request: NextRequest) {
     if (!body.nomComplet || body.nomComplet.trim().length < 3) {
       return NextResponse.json(
         { error: "Le nom et prénom doivent contenir au moins 3 caractères." },
+        { status: 400 }
+      );
+    }
+
+    // Validation travaux
+    if (
+      !body.travaux ||
+      !["pac", "ite", "fenetres", "solaire", "renovation"].includes(body.travaux)
+    ) {
+      return NextResponse.json(
+        { error: "Le type de travaux est obligatoire." },
         { status: 400 }
       );
     }
@@ -101,6 +113,7 @@ export async function POST(request: NextRequest) {
       leadId: body.leadId || "",
       statutOccupation: body.statutOccupation,
       typeLogement: body.typeLogement,
+      travaux: body.travaux,
       nomComplet: body.nomComplet.trim(),
       telephone: telephoneCleaned,
       codePostal: body.codePostal,

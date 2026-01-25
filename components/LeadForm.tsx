@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { TravauxKey } from "@/lib/campaigns";
 
 interface LeadFormData {
   statutOccupation: "proprietaire" | "locataire" | "";
@@ -10,6 +11,7 @@ interface LeadFormData {
   codePostal: string;
   adresse: string;
   email?: string;
+  travaux?: TravauxKey;
   leadId?: string;
   otpVerified?: boolean;
   otpStatus?: "pending" | "verified";
@@ -17,7 +19,11 @@ interface LeadFormData {
 
 type FormStep = "pre" | "form" | "otp" | "success" | "ineligible";
 
-export default function LeadForm() {
+type LeadFormProps = {
+  travaux: TravauxKey;
+};
+
+export default function LeadForm({ travaux }: LeadFormProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [formData, setFormData] = useState<LeadFormData>({
     statutOccupation: "",
@@ -118,31 +124,40 @@ export default function LeadForm() {
     setLeadId(currentLeadId);
 
     try {
-      const leadResponse = await fetch("/api/leads", {
+      if (isNotEligible) {
+        setCurrentStep("ineligible");
+        return;
+      }
+
+      // Afficher l'OTP immédiatement pour éviter l'attente
+      setCurrentStep("otp");
+
+      const leadPromise = fetch("/api/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
+          travaux,
           leadId: currentLeadId,
           otpVerified: false,
           otpStatus: "pending",
         }),
-      });
+      })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Erreur lors de l'envoi du formulaire");
+          }
+        })
+        .catch((error) => {
+          setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
+        });
 
-      const leadData = await leadResponse.json();
+      const otpPromise = sendOtpRequest(false);
 
-      if (!leadResponse.ok) {
-        throw new Error(leadData.error || "Erreur lors de l'envoi du formulaire");
-      }
-
-      if (isNotEligible) {
-        setCurrentStep("ineligible");
-        return;
-      }
-
-      await sendOtpRequest(true);
+      await Promise.allSettled([leadPromise, otpPromise]);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
     } finally {
@@ -182,6 +197,7 @@ export default function LeadForm() {
         },
         body: JSON.stringify({
           ...formData,
+          travaux,
           leadId: leadId || createLeadId(),
           otpVerified: true,
           otpStatus: "verified",
