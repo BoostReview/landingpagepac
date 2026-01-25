@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 interface LeadFormData {
+  statutOccupation: "proprietaire" | "locataire";
+  typeLogement: "maison" | "appartement";
   nomComplet: string;
   telephone: string;
   codePostal: string;
@@ -19,6 +21,22 @@ export async function POST(request: NextRequest) {
     if (!body.nomComplet || body.nomComplet.trim().length < 3) {
       return NextResponse.json(
         { error: "Le nom et prénom doivent contenir au moins 3 caractères." },
+        { status: 400 }
+      );
+    }
+
+    // Validation statut d'occupation
+    if (body.statutOccupation !== "proprietaire" && body.statutOccupation !== "locataire") {
+      return NextResponse.json(
+        { error: "Le statut d'occupation est obligatoire." },
+        { status: 400 }
+      );
+    }
+
+    // Validation type de logement
+    if (body.typeLogement !== "maison" && body.typeLogement !== "appartement") {
+      return NextResponse.json(
+        { error: "Le type de logement est obligatoire." },
         { status: 400 }
       );
     }
@@ -81,6 +99,8 @@ export async function POST(request: NextRequest) {
     
     console.log("Lead reçu:", {
       leadId: body.leadId || "",
+      statutOccupation: body.statutOccupation,
+      typeLogement: body.typeLogement,
       nomComplet: body.nomComplet.trim(),
       telephone: telephoneCleaned,
       codePostal: body.codePostal,

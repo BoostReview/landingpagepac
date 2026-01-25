@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 interface LeadFormData {
+  statutOccupation: "proprietaire" | "locataire" | "";
+  typeLogement: "maison" | "appartement" | "";
   nomComplet: string;
   telephone: string;
   codePostal: string;
@@ -18,6 +20,8 @@ type FormStep = "form" | "otp" | "success";
 export default function LeadForm() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [formData, setFormData] = useState<LeadFormData>({
+    statutOccupation: "",
+    typeLogement: "",
     nomComplet: "",
     telephone: "",
     codePostal: "",
@@ -32,6 +36,8 @@ export default function LeadForm() {
   const [submitError, setSubmitError] = useState<string>("");
   const [otpInfo, setOtpInfo] = useState<string>("");
   const [leadId, setLeadId] = useState<string>("");
+  const isNotEligible =
+    formData.statutOccupation === "locataire" || formData.typeLogement === "appartement";
 
   useEffect(() => {
     if (currentStep !== "otp" && currentStep !== "success") {
@@ -186,10 +192,12 @@ export default function LeadForm() {
       // Succès
       setCurrentStep("success");
       
-      // Redirection après 2 secondes
-      setTimeout(() => {
-        window.location.href = "https://www.economie.gouv.fr/particuliers";
-      }, 2000);
+      if (!isNotEligible) {
+        // Redirection après 2 secondes
+        setTimeout(() => {
+          window.location.href = "https://www.economie.gouv.fr/particuliers";
+        }, 2000);
+      }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
       setOtpCode(""); // Réinitialiser le code en cas d'erreur
@@ -209,11 +217,23 @@ export default function LeadForm() {
         <div className="fr-container">
           <div className="fr-grid-row fr-grid-row--center">
             <div className="fr-col-12 fr-col-md-8">
-              <div className="fr-alert fr-alert--success fr-mb-4w" role="alert">
-                <h3 className="fr-alert__title">Demande enregistrée</h3>
-                <p>
-                  Votre demande a été enregistrée avec succès. Vous allez être redirigé dans quelques instants.
-                </p>
+              <div
+                className={`fr-alert ${isNotEligible ? "fr-alert--error" : "fr-alert--success"} fr-mb-4w`}
+                role="alert"
+              >
+                <h3 className="fr-alert__title">
+                  {isNotEligible ? "Non éligible aux aides" : "Demande enregistrée"}
+                </h3>
+                {isNotEligible ? (
+                  <p>
+                    Selon les informations fournies, les aides ne sont pas disponibles pour les locataires
+                    ou les appartements.
+                  </p>
+                ) : (
+                  <p>
+                    Votre demande a été enregistrée avec succès. Vous allez être redirigé dans quelques instants.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -323,6 +343,74 @@ export default function LeadForm() {
             </p>
 
             <form onSubmit={handleSubmit} noValidate className="form-mobile-optimized">
+              <div className="fr-input-group">
+                <label className="fr-label">
+                  Statut d'occupation <span className="fr-hint-text">(obligatoire)</span>
+                </label>
+                <div className="fr-radio-group">
+                  <input
+                    type="radio"
+                    id="statut-proprietaire"
+                    name="statutOccupation"
+                    value="proprietaire"
+                    checked={formData.statutOccupation === "proprietaire"}
+                    onChange={() => setFormData({ ...formData, statutOccupation: "proprietaire" })}
+                    required
+                  />
+                  <label className="fr-label" htmlFor="statut-proprietaire">
+                    Propriétaire
+                  </label>
+                </div>
+                <div className="fr-radio-group">
+                  <input
+                    type="radio"
+                    id="statut-locataire"
+                    name="statutOccupation"
+                    value="locataire"
+                    checked={formData.statutOccupation === "locataire"}
+                    onChange={() => setFormData({ ...formData, statutOccupation: "locataire" })}
+                    required
+                  />
+                  <label className="fr-label" htmlFor="statut-locataire">
+                    Locataire
+                  </label>
+                </div>
+              </div>
+
+              <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
+                <label className="fr-label">
+                  Type de logement <span className="fr-hint-text">(obligatoire)</span>
+                </label>
+                <div className="fr-radio-group">
+                  <input
+                    type="radio"
+                    id="logement-maison"
+                    name="typeLogement"
+                    value="maison"
+                    checked={formData.typeLogement === "maison"}
+                    onChange={() => setFormData({ ...formData, typeLogement: "maison" })}
+                    required
+                  />
+                  <label className="fr-label" htmlFor="logement-maison">
+                    Maison
+                  </label>
+                </div>
+                <div className="fr-radio-group">
+                  <input
+                    type="radio"
+                    id="logement-appartement"
+                    name="typeLogement"
+                    value="appartement"
+                    checked={formData.typeLogement === "appartement"}
+                    onChange={() => setFormData({ ...formData, typeLogement: "appartement" })}
+                    required
+                  />
+                  <label className="fr-label" htmlFor="logement-appartement">
+                    Appartement
+                  </label>
+                </div>
+              </div>
+
               <div className="fr-input-group">
                 <label className="fr-label" htmlFor="nom-complet">
                   Nom et prénom <span className="fr-hint-text">(obligatoire)</span>
