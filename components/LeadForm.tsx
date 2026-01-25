@@ -17,7 +17,6 @@ interface LeadFormData {
   revenuFiscalRef?: string;
   leadId?: string;
   otpVerified?: boolean;
-  otpStatus?: "pending" | "verified";
 }
 
 type FormStep = "pre" | "form" | "otp" | "heating" | "success" | "ineligible";
@@ -265,7 +264,6 @@ export default function LeadForm({ travaux }: LeadFormProps) {
           travaux,
           leadId: currentLeadId,
           otpVerified: false,
-          otpStatus: "pending",
         }),
       })
         .then(async (response) => {
@@ -328,7 +326,6 @@ export default function LeadForm({ travaux }: LeadFormProps) {
           travaux,
           leadId: leadId || createLeadId(),
           otpVerified: true,
-          otpStatus: "verified",
         }),
       });
 
@@ -370,7 +367,6 @@ export default function LeadForm({ travaux }: LeadFormProps) {
           travaux,
           leadId: leadId || createLeadId(),
           otpVerified: true,
-          otpStatus: "verified",
         }),
       });
 

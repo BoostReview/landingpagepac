@@ -13,7 +13,6 @@ interface LeadFormData {
   chauffageConso?: string;
   leadId?: string;
   otpVerified?: boolean;
-  otpStatus?: "pending" | "verified";
 }
 
 export async function POST(request: NextRequest) {
@@ -145,7 +144,6 @@ export async function POST(request: NextRequest) {
       adresse: body.adresse.trim(),
       email: body.email?.trim() || "",
       otpVerified: body.otpVerified === true,
-      otpStatus: body.otpStatus || "",
       date: new Date().toISOString(),
     });
 
