@@ -185,9 +185,10 @@ export async function PUT(request: NextRequest) {
       const checkData = await checkResponse.json();
       const message = typeof checkData?.message === "string" ? checkData.message.toLowerCase() : "";
       const status = typeof checkData?.status === "string" ? checkData.status.toLowerCase() : "";
-      const code = typeof checkData?.code === "string" ? checkData.code : String(checkData?.code ?? "");
+      const responseCode =
+        typeof checkData?.code === "string" ? checkData.code : String(checkData?.code ?? "");
       const isVerified =
-        code === "0" &&
+        responseCode === "0" &&
         (checkData?.data?.verified === true ||
           checkData?.data?.isValid === true ||
           checkData?.verified === true ||
