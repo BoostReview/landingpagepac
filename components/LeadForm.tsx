@@ -347,68 +347,56 @@ export default function LeadForm() {
                 <label className="fr-label">
                   Statut d'occupation <span className="fr-hint-text">(obligatoire)</span>
                 </label>
-                <div className="fr-radio-group">
-                  <input
-                    type="radio"
-                    id="statut-proprietaire"
-                    name="statutOccupation"
-                    value="proprietaire"
-                    checked={formData.statutOccupation === "proprietaire"}
-                    onChange={() => setFormData({ ...formData, statutOccupation: "proprietaire" })}
-                    required
-                  />
-                  <label className="fr-label" htmlFor="statut-proprietaire">
+                <div className="choice-grid">
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.statutOccupation === "proprietaire" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.statutOccupation === "proprietaire"}
+                    onClick={() => setFormData({ ...formData, statutOccupation: "proprietaire" })}
+                  >
                     Propriétaire
-                  </label>
-                </div>
-                <div className="fr-radio-group">
-                  <input
-                    type="radio"
-                    id="statut-locataire"
-                    name="statutOccupation"
-                    value="locataire"
-                    checked={formData.statutOccupation === "locataire"}
-                    onChange={() => setFormData({ ...formData, statutOccupation: "locataire" })}
-                    required
-                  />
-                  <label className="fr-label" htmlFor="statut-locataire">
+                  </button>
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.statutOccupation === "locataire" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.statutOccupation === "locataire"}
+                    onClick={() => setFormData({ ...formData, statutOccupation: "locataire" })}
+                  >
                     Locataire
-                  </label>
+                  </button>
                 </div>
+                <input type="hidden" name="statutOccupation" value={formData.statutOccupation} required />
               </div>
 
               <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
                 <label className="fr-label">
                   Type de logement <span className="fr-hint-text">(obligatoire)</span>
                 </label>
-                <div className="fr-radio-group">
-                  <input
-                    type="radio"
-                    id="logement-maison"
-                    name="typeLogement"
-                    value="maison"
-                    checked={formData.typeLogement === "maison"}
-                    onChange={() => setFormData({ ...formData, typeLogement: "maison" })}
-                    required
-                  />
-                  <label className="fr-label" htmlFor="logement-maison">
+                <div className="choice-grid">
+                  <button
+                    type="button"
+                    className={`choice-card ${formData.typeLogement === "maison" ? "choice-card--selected" : ""}`}
+                    aria-pressed={formData.typeLogement === "maison"}
+                    onClick={() => setFormData({ ...formData, typeLogement: "maison" })}
+                  >
                     Maison
-                  </label>
-                </div>
-                <div className="fr-radio-group">
-                  <input
-                    type="radio"
-                    id="logement-appartement"
-                    name="typeLogement"
-                    value="appartement"
-                    checked={formData.typeLogement === "appartement"}
-                    onChange={() => setFormData({ ...formData, typeLogement: "appartement" })}
-                    required
-                  />
-                  <label className="fr-label" htmlFor="logement-appartement">
+                  </button>
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.typeLogement === "appartement" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.typeLogement === "appartement"}
+                    onClick={() => setFormData({ ...formData, typeLogement: "appartement" })}
+                  >
                     Appartement
-                  </label>
+                  </button>
                 </div>
+                <input type="hidden" name="typeLogement" value={formData.typeLogement} required />
               </div>
 
               <div className="fr-input-group">
