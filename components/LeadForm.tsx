@@ -48,6 +48,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
   const [submitError, setSubmitError] = useState<string>("");
   const [otpInfo, setOtpInfo] = useState<string>("");
   const [leadId, setLeadId] = useState<string>("");
+  const [otpCooldown, setOtpCooldown] = useState(0);
   const [adresseSuggestions, setAdresseSuggestions] = useState<string[]>([]);
   const [codePostalSuggestions, setCodePostalSuggestions] = useState<string[]>([]);
   const [isFetchingAdresse, setIsFetchingAdresse] = useState(false);
@@ -81,6 +82,18 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     requestAnimationFrame(scrollToSection);
     setTimeout(scrollToSection, 0);
   }, [currentStep]);
+
+  useEffect(() => {
+    if (otpCooldown <= 0) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
 
   useEffect(() => {
     const query = formData.adresse.trim();
@@ -208,6 +221,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
       }
 
       setOtpInfo("Code envoyé par SMS. Il est valide 5 minutes.");
+      setOtpCooldown(20);
       if (moveToOtp) {
         setCurrentStep("otp");
       }
@@ -566,15 +580,21 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                 </div>
 
                 {otpInfo && (
-                  <div className="fr-alert fr-alert--success fr-mt-3w fr-mt-md-4w" role="alert">
-                    <p>{otpInfo}</p>
-                  </div>
+                  <p className="fr-hint-text fr-mt-3w fr-mt-md-4w" role="status">
+                    {otpInfo}
+                  </p>
                 )}
 
                 {submitError && (
-                  <div className="fr-alert fr-alert--error fr-mt-3w fr-mt-md-4w" role="alert">
-                    <p>{submitError}</p>
-                  </div>
+                  <p className="fr-error-text fr-mt-3w fr-mt-md-4w" role="alert">
+                    {submitError}
+                  </p>
+                )}
+
+                {otpCooldown > 0 && (
+                  <p className="fr-hint-text fr-mt-2w" role="status">
+                    Vous pourrez renvoyer le code dans {otpCooldown}s.
+                  </p>
                 )}
 
                 <div className="fr-btns-group fr-btns-group--right fr-mt-4w fr-mt-md-5w">
@@ -582,7 +602,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                     type="button"
                     className="fr-btn fr-btn--secondary"
                     onClick={handleResendOTP}
-                    disabled={isSendingOTP}
+                    disabled={isSendingOTP || otpCooldown > 0}
                     aria-label="Renvoyer le code"
                   >
                     {isSendingOTP ? "Envoi du code..." : "Renvoyer le code"}
