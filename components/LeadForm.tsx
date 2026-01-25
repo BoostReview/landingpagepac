@@ -15,7 +15,7 @@ interface LeadFormData {
   otpStatus?: "pending" | "verified";
 }
 
-type FormStep = "form" | "otp" | "success";
+type FormStep = "pre" | "form" | "otp" | "success" | "ineligible";
 
 export default function LeadForm() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -28,7 +28,7 @@ export default function LeadForm() {
     adresse: "",
     email: "",
   });
-  const [currentStep, setCurrentStep] = useState<FormStep>("form");
+  const [currentStep, setCurrentStep] = useState<FormStep>("pre");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
@@ -40,7 +40,7 @@ export default function LeadForm() {
     formData.statutOccupation === "locataire" || formData.typeLogement === "appartement";
 
   useEffect(() => {
-    if (currentStep !== "otp" && currentStep !== "success") {
+    if (currentStep !== "form" && currentStep !== "otp" && currentStep !== "success" && currentStep !== "ineligible") {
       return;
     }
 
@@ -137,6 +137,11 @@ export default function LeadForm() {
         throw new Error(leadData.error || "Erreur lors de l'envoi du formulaire");
       }
 
+      if (isNotEligible) {
+        setCurrentStep("ineligible");
+        return;
+      }
+
       await sendOtpRequest(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
@@ -211,29 +216,140 @@ export default function LeadForm() {
     await sendOtpRequest(false);
   };
 
+  if (currentStep === "ineligible") {
+    return (
+      <section ref={sectionRef} className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+        <div className="fr-container">
+          <div className="fr-grid-row fr-grid-row--center">
+            <div className="fr-col-12 fr-col-md-8">
+              <div className="fr-alert fr-alert--error fr-mb-4w" role="alert">
+                <h3 className="fr-alert__title">Non éligible aux aides</h3>
+                <p>
+                  Selon les informations fournies, les aides ne sont pas disponibles pour les locataires
+                  ou les appartements.
+                </p>
+              </div>
+              <div className="fr-btns-group fr-btns-group--center">
+                <button
+                  type="button"
+                  className="fr-btn fr-btn--secondary"
+                  onClick={() => {
+                    setCurrentStep("pre");
+                    setSubmitError("");
+                    setOtpInfo("");
+                  }}
+                >
+                  Modifier mes réponses
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (currentStep === "success") {
     return (
       <section ref={sectionRef} className="section-spacing" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
         <div className="fr-container">
           <div className="fr-grid-row fr-grid-row--center">
             <div className="fr-col-12 fr-col-md-8">
-              <div
-                className={`fr-alert ${isNotEligible ? "fr-alert--error" : "fr-alert--success"} fr-mb-4w`}
-                role="alert"
-              >
-                <h3 className="fr-alert__title">
-                  {isNotEligible ? "Non éligible aux aides" : "Demande enregistrée"}
-                </h3>
-                {isNotEligible ? (
+              <div className="fr-alert fr-alert--success fr-mb-4w" role="alert">
+                <h3 className="fr-alert__title">Demande enregistrée</h3>
+                <p>
+                  Votre demande a été enregistrée avec succès. Vous allez être redirigé dans quelques instants.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (currentStep === "pre") {
+    return (
+      <section ref={sectionRef} className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+        <div className="fr-container">
+          <div className="fr-grid-row fr-grid-row--center">
+            <div className="fr-col-12 fr-col-md-10 fr-col-lg-8">
+              <h2 className="fr-h2 fr-mb-2w fr-mb-md-3w">Avant de commencer</h2>
+              <p className="fr-text fr-mb-3w fr-mb-md-4w">
+                Répondez à ces deux questions pour vérifier votre éligibilité.
+              </p>
+
+              <div className="fr-input-group">
+                <label className="fr-label">
+                  Statut d'occupation <span className="fr-hint-text">(obligatoire)</span>
+                </label>
+                <div className="choice-grid">
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.statutOccupation === "proprietaire" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.statutOccupation === "proprietaire"}
+                    onClick={() => setFormData({ ...formData, statutOccupation: "proprietaire" })}
+                  >
+                    Propriétaire
+                  </button>
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.statutOccupation === "locataire" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.statutOccupation === "locataire"}
+                    onClick={() => setFormData({ ...formData, statutOccupation: "locataire" })}
+                  >
+                    Locataire
+                  </button>
+                </div>
+              </div>
+
+              <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
+                <label className="fr-label">
+                  Type de logement <span className="fr-hint-text">(obligatoire)</span>
+                </label>
+                <div className="choice-grid">
+                  <button
+                    type="button"
+                    className={`choice-card ${formData.typeLogement === "maison" ? "choice-card--selected" : ""}`}
+                    aria-pressed={formData.typeLogement === "maison"}
+                    onClick={() => setFormData({ ...formData, typeLogement: "maison" })}
+                  >
+                    Maison
+                  </button>
+                  <button
+                    type="button"
+                    className={`choice-card ${
+                      formData.typeLogement === "appartement" ? "choice-card--selected" : ""
+                    }`}
+                    aria-pressed={formData.typeLogement === "appartement"}
+                    onClick={() => setFormData({ ...formData, typeLogement: "appartement" })}
+                  >
+                    Appartement
+                  </button>
+                </div>
+              </div>
+
+              {isNotEligible && formData.statutOccupation && formData.typeLogement && (
+                <div className="fr-alert fr-alert--error fr-mt-4w" role="alert">
                   <p>
-                    Selon les informations fournies, les aides ne sont pas disponibles pour les locataires
-                    ou les appartements.
+                    Selon vos réponses, vous n'êtes pas éligible aux aides (locataire ou appartement).
                   </p>
-                ) : (
-                  <p>
-                    Votre demande a été enregistrée avec succès. Vous allez être redirigé dans quelques instants.
-                  </p>
-                )}
+                </div>
+              )}
+
+              <div className="fr-btns-group fr-btns-group--right fr-mt-4w fr-mt-md-5w">
+                <button
+                  type="button"
+                  className="fr-btn fr-btn--primary"
+                  disabled={!formData.statutOccupation || !formData.typeLogement || isNotEligible}
+                  onClick={() => setCurrentStep(isNotEligible ? "ineligible" : "form")}
+                >
+                  Continuer
+                </button>
               </div>
             </div>
           </div>
@@ -343,61 +459,6 @@ export default function LeadForm() {
             </p>
 
             <form onSubmit={handleSubmit} noValidate className="form-mobile-optimized">
-              <div className="fr-input-group">
-                <label className="fr-label">
-                  Statut d'occupation <span className="fr-hint-text">(obligatoire)</span>
-                </label>
-                <div className="choice-grid">
-                  <button
-                    type="button"
-                    className={`choice-card ${
-                      formData.statutOccupation === "proprietaire" ? "choice-card--selected" : ""
-                    }`}
-                    aria-pressed={formData.statutOccupation === "proprietaire"}
-                    onClick={() => setFormData({ ...formData, statutOccupation: "proprietaire" })}
-                  >
-                    Propriétaire
-                  </button>
-                  <button
-                    type="button"
-                    className={`choice-card ${
-                      formData.statutOccupation === "locataire" ? "choice-card--selected" : ""
-                    }`}
-                    aria-pressed={formData.statutOccupation === "locataire"}
-                    onClick={() => setFormData({ ...formData, statutOccupation: "locataire" })}
-                  >
-                    Locataire
-                  </button>
-                </div>
-                <input type="hidden" name="statutOccupation" value={formData.statutOccupation} required />
-              </div>
-
-              <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
-                <label className="fr-label">
-                  Type de logement <span className="fr-hint-text">(obligatoire)</span>
-                </label>
-                <div className="choice-grid">
-                  <button
-                    type="button"
-                    className={`choice-card ${formData.typeLogement === "maison" ? "choice-card--selected" : ""}`}
-                    aria-pressed={formData.typeLogement === "maison"}
-                    onClick={() => setFormData({ ...formData, typeLogement: "maison" })}
-                  >
-                    Maison
-                  </button>
-                  <button
-                    type="button"
-                    className={`choice-card ${
-                      formData.typeLogement === "appartement" ? "choice-card--selected" : ""
-                    }`}
-                    aria-pressed={formData.typeLogement === "appartement"}
-                    onClick={() => setFormData({ ...formData, typeLogement: "appartement" })}
-                  >
-                    Appartement
-                  </button>
-                </div>
-                <input type="hidden" name="typeLogement" value={formData.typeLogement} required />
-              </div>
 
               <div className="fr-input-group">
                 <label className="fr-label" htmlFor="nom-complet">
