@@ -218,10 +218,15 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError("");
     setOtpInfo("");
+    const form = e.currentTarget;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
     setIsSubmitting(true);
 
     const currentLeadId = leadId || createLeadId();
@@ -269,9 +274,14 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     }
   };
 
-  const handleOTPSubmit = async (e: React.FormEvent) => {
+  const handleOTPSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError("");
+    const form = e.currentTarget;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
     setIsVerifyingOTP(true);
 
     try {
@@ -324,9 +334,14 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     }
   };
 
-  const handleHeatingSubmit = async (e: React.FormEvent) => {
+  const handleHeatingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError("");
+    const form = e.currentTarget;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
     setIsSubmitting(true);
 
     try {
