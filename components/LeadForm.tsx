@@ -328,6 +328,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
       setCurrentStep("heating");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
+      setOtpInfo("");
       setOtpCode(""); // Réinitialiser le code en cas d'erreur
     } finally {
       setIsVerifyingOTP(false);
