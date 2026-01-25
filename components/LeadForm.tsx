@@ -52,6 +52,8 @@ export default function LeadForm({ travaux }: LeadFormProps) {
   const [codePostalSuggestions, setCodePostalSuggestions] = useState<string[]>([]);
   const [isFetchingAdresse, setIsFetchingAdresse] = useState(false);
   const [isFetchingCodePostal, setIsFetchingCodePostal] = useState(false);
+  const lastSelectedAdresse = useRef<string>("");
+  const lastSelectedCodePostal = useRef<string>("");
   const isNotEligible =
     formData.statutOccupation === "locataire" || formData.typeLogement === "appartement";
 
@@ -87,6 +89,12 @@ export default function LeadForm({ travaux }: LeadFormProps) {
       return;
     }
 
+    if (lastSelectedAdresse.current && lastSelectedAdresse.current === query) {
+      lastSelectedAdresse.current = "";
+      setAdresseSuggestions([]);
+      return;
+    }
+
     const timeout = setTimeout(async () => {
       setIsFetchingAdresse(true);
       try {
@@ -113,6 +121,12 @@ export default function LeadForm({ travaux }: LeadFormProps) {
   useEffect(() => {
     const query = formData.codePostal.trim();
     if (query.length < 2) {
+      setCodePostalSuggestions([]);
+      return;
+    }
+
+    if (lastSelectedCodePostal.current && lastSelectedCodePostal.current === query) {
+      lastSelectedCodePostal.current = "";
       setCodePostalSuggestions([]);
       return;
     }
@@ -828,6 +842,9 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                   value={formData.codePostal}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "").slice(0, 5);
+                    if (value && value !== formData.codePostal) {
+                      lastSelectedCodePostal.current = "";
+                    }
                     setFormData({ ...formData, codePostal: value });
                   }}
                   required
@@ -836,6 +853,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                   inputMode="numeric"
                   autoComplete="postal-code"
                   placeholder="75001"
+                  list="code-postal-suggestions"
                 />
                 <p className="fr-hint-text">
                   Format : 5 chiffres (exemple : 75001)
@@ -844,23 +862,13 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                   <p className="fr-hint-text">Recherche en cours...</p>
                 )}
                 {codePostalSuggestions.length > 0 && (
-                  <ul className="suggestions-list" role="listbox">
+                  <datalist id="code-postal-suggestions">
                     {codePostalSuggestions.map((suggestion) => (
-                      <li key={suggestion}>
-                        <button
-                          type="button"
-                          className="suggestion-item"
-                          onClick={() => {
-                            const postal = suggestion.split(" ")[0];
-                            setFormData({ ...formData, codePostal: postal });
-                            setCodePostalSuggestions([]);
-                          }}
-                        >
-                          {suggestion}
-                        </button>
-                      </li>
+                      <option key={suggestion} value={suggestion.split(" ")[0]}>
+                        {suggestion}
+                      </option>
                     ))}
-                  </ul>
+                  </datalist>
                 )}
               </div>
 
@@ -890,6 +898,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                           type="button"
                           className="suggestion-item"
                           onClick={() => {
+                            lastSelectedAdresse.current = suggestion;
                             setFormData({ ...formData, adresse: suggestion });
                             setAdresseSuggestions([]);
                           }}
