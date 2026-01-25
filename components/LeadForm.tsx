@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LeadFormData {
   nomComplet: string;
@@ -8,11 +8,15 @@ interface LeadFormData {
   codePostal: string;
   adresse: string;
   email?: string;
+  leadId?: string;
+  otpVerified?: boolean;
+  otpStatus?: "pending" | "verified";
 }
 
 type FormStep = "form" | "otp" | "success";
 
 export default function LeadForm() {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [formData, setFormData] = useState<LeadFormData>({
     nomComplet: "",
     telephone: "",
@@ -27,6 +31,26 @@ export default function LeadForm() {
   const [otpCode, setOtpCode] = useState("");
   const [submitError, setSubmitError] = useState<string>("");
   const [otpInfo, setOtpInfo] = useState<string>("");
+  const [leadId, setLeadId] = useState<string>("");
+
+  useEffect(() => {
+    if (currentStep !== "otp" && currentStep !== "success") {
+      return;
+    }
+
+    const section = sectionRef.current;
+    if (!section) {
+      return;
+    }
+
+    const scrollToSection = () => {
+      const y = section.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    };
+
+    requestAnimationFrame(scrollToSection);
+    setTimeout(scrollToSection, 0);
+  }, [currentStep]);
 
   const formatPhoneNumber = (value: string): string => {
     const cleaned = value.replace(/\D/g, "");
@@ -38,6 +62,13 @@ export default function LeadForm() {
     if (limited.length <= 6) return `${limited.slice(0, 2)} ${limited.slice(2, 4)} ${limited.slice(4)}`;
     if (limited.length <= 8) return `${limited.slice(0, 2)} ${limited.slice(2, 4)} ${limited.slice(4, 6)} ${limited.slice(6)}`;
     return `${limited.slice(0, 2)} ${limited.slice(2, 4)} ${limited.slice(4, 6)} ${limited.slice(6, 8)} ${limited.slice(8)}`;
+  };
+
+  const createLeadId = () => {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID();
+    }
+    return `lead_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   };
 
   const sendOtpRequest = async (moveToOtp: boolean) => {
@@ -73,9 +104,39 @@ export default function LeadForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError("");
+    setOtpInfo("");
     setIsSubmitting(true);
-    await sendOtpRequest(true);
-    setIsSubmitting(false);
+
+    const currentLeadId = leadId || createLeadId();
+    setLeadId(currentLeadId);
+
+    try {
+      const leadResponse = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          leadId: currentLeadId,
+          otpVerified: false,
+          otpStatus: "pending",
+        }),
+      });
+
+      const leadData = await leadResponse.json();
+
+      if (!leadResponse.ok) {
+        throw new Error(leadData.error || "Erreur lors de l'envoi du formulaire");
+      }
+
+      await sendOtpRequest(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOTPSubmit = async (e: React.FormEvent) => {
@@ -102,7 +163,7 @@ export default function LeadForm() {
         throw new Error(verifyData.error || "Code OTP incorrect");
       }
 
-      // Code OTP valide, enregistrer le lead
+      // Code OTP valide, mettre à jour le lead
       const leadResponse = await fetch("/api/leads", {
         method: "POST",
         headers: {
@@ -110,7 +171,9 @@ export default function LeadForm() {
         },
         body: JSON.stringify({
           ...formData,
+          leadId: leadId || createLeadId(),
           otpVerified: true,
+          otpStatus: "verified",
         }),
       });
 
@@ -142,7 +205,7 @@ export default function LeadForm() {
 
   if (currentStep === "success") {
     return (
-      <section className="section-spacing" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+      <section ref={sectionRef} className="section-spacing" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
         <div className="fr-container">
           <div className="fr-grid-row fr-grid-row--center">
             <div className="fr-col-12 fr-col-md-8">
@@ -161,7 +224,7 @@ export default function LeadForm() {
 
   if (currentStep === "otp") {
     return (
-      <section className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+      <section ref={sectionRef} className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
         <div className="fr-container">
           <div className="fr-grid-row fr-grid-row--center">
             <div className="fr-col-12 fr-col-md-10 fr-col-lg-8">
@@ -250,7 +313,7 @@ export default function LeadForm() {
   }
 
   return (
-    <section className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+    <section ref={sectionRef} className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
       <div className="fr-container">
         <div className="fr-grid-row fr-grid-row--center">
           <div className="fr-col-12 fr-col-md-10 fr-col-lg-8">
