@@ -71,11 +71,20 @@ export async function POST(request: NextRequest) {
     const phoneInternational = formatInternationalPhone(telephoneCleaned);
 
     try {
+      console.log("[OTP SEND] request", {
+        telephone: telephoneCleaned,
+        phoneInternational,
+      });
       if (!UNIMTX_ACCESS_KEY_ID || UNIMTX_ACCESS_KEY_ID.trim().length === 0) {
         throw new Error("Clé API Unimtx manquante");
       }
 
       const cleanedAccessKey = UNIMTX_ACCESS_KEY_ID.trim().replace(/\s/g, "");
+      console.log("[OTP SEND] accessKey", {
+        length: cleanedAccessKey.length,
+        prefix: cleanedAccessKey.slice(0, 4),
+        suffix: cleanedAccessKey.slice(-4),
+      });
 
       const requestBody = {
         to: phoneInternational,
@@ -96,6 +105,11 @@ export async function POST(request: NextRequest) {
       );
 
       const responseData = await response.json();
+      console.log("[OTP SEND] response", {
+        status: response.status,
+        ok: response.ok,
+        data: responseData,
+      });
 
       if (!response.ok || responseData.code !== "0") {
         throw new Error(
@@ -107,6 +121,7 @@ export async function POST(request: NextRequest) {
         responseData?.data?.verificationId ||
         responseData?.data?.verification_id ||
         responseData?.data?.id;
+      console.log("[OTP SEND] verificationId", { verificationId });
 
       otpStore.set(telephoneCleaned, {
         expiresAt,
@@ -174,6 +189,12 @@ export async function PUT(request: NextRequest) {
     // Vérifier le code via Unimtx API
     try {
       const cleanedAccessKey = UNIMTX_ACCESS_KEY_ID.trim().replace(/\s/g, "");
+      console.log("[OTP VERIFY] request", {
+        telephone: telephoneCleaned,
+        phoneInternational,
+        codeLength: String(code).trim().length,
+        verificationId: stored?.verificationId || null,
+      });
 
       const storedVerificationId = stored?.verificationId;
       const checkResponse = await fetch(
@@ -196,6 +217,11 @@ export async function PUT(request: NextRequest) {
       );
 
       const checkData = await checkResponse.json();
+      console.log("[OTP VERIFY] response", {
+        status: checkResponse.status,
+        ok: checkResponse.ok,
+        data: checkData,
+      });
       const message = typeof checkData?.message === "string" ? checkData.message.toLowerCase() : "";
       const status = typeof checkData?.status === "string" ? checkData.status.toLowerCase() : "";
       const responseCode =
