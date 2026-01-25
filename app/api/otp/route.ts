@@ -8,7 +8,10 @@ const UNIMTX_ACCESS_KEY_ID =
 const UNIMTX_API_URL = "https://api.unimtx.com";
 
 // Stockage temporaire en mémoire (en production, utilisez Redis ou une base de données)
-const otpStore = new Map<string, { expiresAt: number; telephone: string; verificationId?: string }>();
+const otpStore = new Map<
+  string,
+  { expiresAt: number; telephone: string; verificationId?: string }
+>();
 
 // Convertir un numéro français (0X XX XX XX XX) en format E.164 (+33XXXXXXXXX)
 function formatInternationalPhone(phone: string): string {
@@ -100,9 +103,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const verificationId =
+        responseData?.data?.verificationId ||
+        responseData?.data?.verification_id ||
+        responseData?.data?.id;
+
       otpStore.set(telephoneCleaned, {
         expiresAt,
         telephone: telephoneCleaned,
+        verificationId: verificationId ? String(verificationId) : undefined,
       });
 
       return NextResponse.json(
@@ -166,6 +175,7 @@ export async function PUT(request: NextRequest) {
     try {
       const cleanedAccessKey = UNIMTX_ACCESS_KEY_ID.trim().replace(/\s/g, "");
 
+      const storedVerificationId = stored?.verificationId;
       const checkResponse = await fetch(
         `${UNIMTX_API_URL}/?action=otp.verify&accessKeyId=${encodeURIComponent(
           cleanedAccessKey
@@ -178,6 +188,9 @@ export async function PUT(request: NextRequest) {
           body: JSON.stringify({
             to: phoneInternational,
             code: String(code).trim(),
+            verificationId: storedVerificationId,
+            verification_id: storedVerificationId,
+            id: storedVerificationId,
           }),
         }
       );
@@ -192,7 +205,8 @@ export async function PUT(request: NextRequest) {
         (checkData?.data?.verified === true ||
           checkData?.data?.isValid === true ||
           checkData?.verified === true ||
-          checkData?.valid === true) &&
+          checkData?.valid === true ||
+          status === "verified") &&
         !message.includes("invalid") &&
         !message.includes("incorrect") &&
         !message.includes("wrong") &&
