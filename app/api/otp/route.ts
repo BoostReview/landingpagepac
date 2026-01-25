@@ -192,12 +192,7 @@ export async function PUT(request: NextRequest) {
         (checkData?.data?.verified === true ||
           checkData?.data?.isValid === true ||
           checkData?.verified === true ||
-          checkData?.valid === true ||
-          status === "verified" ||
-          status === "success" ||
-          status === "ok" ||
-          message.includes("success") ||
-          message.includes("verified")) &&
+          checkData?.valid === true) &&
         !message.includes("invalid") &&
         !message.includes("incorrect") &&
         !message.includes("wrong") &&
