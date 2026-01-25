@@ -12,12 +12,14 @@ interface LeadFormData {
   adresse: string;
   email?: string;
   travaux?: TravauxKey;
+  chauffageType?: "electrique" | "gaz" | "fioul" | "bois" | "pac" | "autre" | "";
+  chauffageConso?: string;
   leadId?: string;
   otpVerified?: boolean;
   otpStatus?: "pending" | "verified";
 }
 
-type FormStep = "pre" | "form" | "otp" | "success" | "ineligible";
+type FormStep = "pre" | "form" | "otp" | "heating" | "success" | "ineligible";
 
 type LeadFormProps = {
   travaux: TravauxKey;
@@ -33,6 +35,8 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     codePostal: "",
     adresse: "",
     email: "",
+    chauffageType: "",
+    chauffageConso: "",
   });
   const [currentStep, setCurrentStep] = useState<FormStep>("pre");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +50,13 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     formData.statutOccupation === "locataire" || formData.typeLogement === "appartement";
 
   useEffect(() => {
-    if (currentStep !== "form" && currentStep !== "otp" && currentStep !== "success" && currentStep !== "ineligible") {
+    if (
+      currentStep !== "form" &&
+      currentStep !== "otp" &&
+      currentStep !== "heating" &&
+      currentStep !== "success" &&
+      currentStep !== "ineligible"
+    ) {
       return;
     }
 
@@ -210,20 +220,52 @@ export default function LeadForm({ travaux }: LeadFormProps) {
         throw new Error(leadData.error || "Erreur lors de l'envoi du formulaire");
       }
 
-      // Succès
-      setCurrentStep("success");
-      
-      if (!isNotEligible) {
-        // Redirection après 2 secondes
-        setTimeout(() => {
-          window.location.href = "https://www.economie.gouv.fr/particuliers";
-        }, 2000);
-      }
+      // Succès OTP → demander chauffage
+      setCurrentStep("heating");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
       setOtpCode(""); // Réinitialiser le code en cas d'erreur
     } finally {
       setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleHeatingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const leadResponse = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          travaux,
+          leadId: leadId || createLeadId(),
+          otpVerified: true,
+          otpStatus: "verified",
+        }),
+      });
+
+      const leadData = await leadResponse.json();
+
+      if (!leadResponse.ok) {
+        throw new Error(leadData.error || "Erreur lors de l'envoi du formulaire");
+      }
+
+      setCurrentStep("success");
+
+      // Redirection après 2 secondes
+      setTimeout(() => {
+        window.location.href = "https://www.economie.gouv.fr/particuliers";
+      }, 2000);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -454,6 +496,167 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                     aria-label="Vérifier le code"
                   >
                     {isVerifyingOTP ? "Vérification en cours..." : "Vérifier le code"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (currentStep === "heating") {
+    return (
+      <section ref={sectionRef} className="section-spacing form-section-mobile" id="formulaire-eligibilite" style={{ backgroundColor: "#f6f6f6" }} tabIndex={-1}>
+        <div className="fr-container">
+          <div className="fr-grid-row fr-grid-row--center">
+            <div className="fr-col-12 fr-col-md-10 fr-col-lg-8">
+              <h2 className="fr-h2 fr-mb-2w fr-mb-md-3w">Votre chauffage</h2>
+              <p className="fr-text fr-mb-3w fr-mb-md-4w">
+                Dernière étape : indiquez votre type de chauffage et votre consommation mensuelle.
+              </p>
+
+              <form onSubmit={handleHeatingSubmit} noValidate className="form-mobile-optimized">
+                <div className="fr-input-group">
+                  <label className="fr-label">
+                    Type de chauffage <span className="fr-hint-text">(obligatoire)</span>
+                  </label>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-electrique"
+                      name="chauffageType"
+                      value="electrique"
+                      checked={formData.chauffageType === "electrique"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "electrique" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-electrique">
+                      Électrique
+                    </label>
+                  </div>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-gaz"
+                      name="chauffageType"
+                      value="gaz"
+                      checked={formData.chauffageType === "gaz"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "gaz" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-gaz">
+                      Gaz
+                    </label>
+                  </div>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-fioul"
+                      name="chauffageType"
+                      value="fioul"
+                      checked={formData.chauffageType === "fioul"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "fioul" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-fioul">
+                      Fioul
+                    </label>
+                  </div>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-bois"
+                      name="chauffageType"
+                      value="bois"
+                      checked={formData.chauffageType === "bois"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "bois" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-bois">
+                      Bois
+                    </label>
+                  </div>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-pac"
+                      name="chauffageType"
+                      value="pac"
+                      checked={formData.chauffageType === "pac"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "pac" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-pac">
+                      Pompe à chaleur
+                    </label>
+                  </div>
+                  <div className="fr-radio-group">
+                    <input
+                      type="radio"
+                      id="chauffage-autre"
+                      name="chauffageType"
+                      value="autre"
+                      checked={formData.chauffageType === "autre"}
+                      onChange={() => setFormData({ ...formData, chauffageType: "autre" })}
+                      required
+                    />
+                    <label className="fr-label" htmlFor="chauffage-autre">
+                      Autre
+                    </label>
+                  </div>
+                </div>
+
+                <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
+                  <label className="fr-label" htmlFor="chauffage-conso">
+                    Consommation mensuelle en euros <span className="fr-hint-text">(obligatoire)</span>
+                  </label>
+                  <input
+                    className="fr-input"
+                    type="text"
+                    id="chauffage-conso"
+                    name="chauffageConso"
+                    value={formData.chauffageConso}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, "").slice(0, 6);
+                      setFormData({ ...formData, chauffageConso: value });
+                    }}
+                    required
+                    inputMode="numeric"
+                    placeholder="120"
+                  />
+                  <p className="fr-hint-text">Montant moyen par mois (en €).</p>
+                </div>
+
+                {submitError && (
+                  <div className="fr-alert fr-alert--error fr-mt-3w fr-mt-md-4w" role="alert">
+                    <p>{submitError}</p>
+                  </div>
+                )}
+
+                <div className="fr-btns-group fr-btns-group--right fr-mt-4w fr-mt-md-5w">
+                  <button
+                    type="button"
+                    className="fr-btn fr-btn--secondary"
+                    onClick={() => {
+                      setCurrentStep("otp");
+                      setSubmitError("");
+                    }}
+                  >
+                    Retour
+                  </button>
+                  <button
+                    type="submit"
+                    className="fr-btn fr-btn--primary"
+                    disabled={
+                      isSubmitting ||
+                      !formData.chauffageType ||
+                      !formData.chauffageConso ||
+                      Number(formData.chauffageConso) <= 0
+                    }
+                  >
+                    {isSubmitting ? "Envoi en cours..." : "Continuer"}
                   </button>
                 </div>
               </form>

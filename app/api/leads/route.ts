@@ -9,6 +9,8 @@ interface LeadFormData {
   adresse: string;
   email?: string;
   travaux?: "pac" | "ite" | "fenetres" | "solaire" | "renovation";
+  chauffageType?: "electrique" | "gaz" | "fioul" | "bois" | "pac" | "autre";
+  chauffageConso?: string;
   leadId?: string;
   otpVerified?: boolean;
   otpStatus?: "pending" | "verified";
@@ -35,6 +37,27 @@ export async function POST(request: NextRequest) {
         { error: "Le type de travaux est obligatoire." },
         { status: 400 }
       );
+    }
+
+    // Validation chauffage si fourni
+    if (body.chauffageType) {
+      const allowed = ["electrique", "gaz", "fioul", "bois", "pac", "autre"];
+      if (!allowed.includes(body.chauffageType)) {
+        return NextResponse.json(
+          { error: "Le type de chauffage est invalide." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (body.chauffageConso) {
+      const consoNumeric = Number(body.chauffageConso);
+      if (Number.isNaN(consoNumeric) || consoNumeric <= 0) {
+        return NextResponse.json(
+          { error: "La consommation mensuelle doit être un montant valide." },
+          { status: 400 }
+        );
+      }
     }
 
     // Validation statut d'occupation
@@ -114,6 +137,8 @@ export async function POST(request: NextRequest) {
       statutOccupation: body.statutOccupation,
       typeLogement: body.typeLogement,
       travaux: body.travaux,
+      chauffageType: body.chauffageType || "",
+      chauffageConso: body.chauffageConso || "",
       nomComplet: body.nomComplet.trim(),
       telephone: telephoneCleaned,
       codePostal: body.codePostal,
