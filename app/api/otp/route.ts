@@ -183,10 +183,24 @@ export async function PUT(request: NextRequest) {
       );
 
       const checkData = await checkResponse.json();
+      const message = typeof checkData?.message === "string" ? checkData.message.toLowerCase() : "";
+      const status = typeof checkData?.status === "string" ? checkData.status.toLowerCase() : "";
+      const isVerified =
+        checkData?.code === "0" &&
+        (checkData?.data?.verified === true ||
+          checkData?.data?.isValid === true ||
+          checkData?.verified === true ||
+          checkData?.valid === true ||
+          status === "verified" ||
+          status === "success" ||
+          status === "ok") &&
+        !message.includes("invalid") &&
+        !message.includes("incorrect") &&
+        !message.includes("wrong");
 
-      if (!checkResponse.ok || checkData.code !== "0") {
+      if (!checkResponse.ok || !isVerified) {
         return NextResponse.json(
-          { error: checkData.message || "Code OTP incorrect." },
+          { error: checkData?.message || "Code OTP incorrect." },
           { status: 400 }
         );
       }
