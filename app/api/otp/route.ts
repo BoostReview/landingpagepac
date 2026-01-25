@@ -230,6 +230,7 @@ export async function PUT(request: NextRequest) {
         responseCode === "0" &&
         (checkData?.data?.verified === true ||
           checkData?.data?.isValid === true ||
+          checkData?.data?.valid === true ||
           checkData?.verified === true ||
           checkData?.valid === true ||
           status === "verified") &&
