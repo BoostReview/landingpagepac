@@ -14,6 +14,7 @@ interface LeadFormData {
   travaux?: TravauxKey;
   chauffageType?: "electrique" | "gaz" | "fioul" | "bois" | "pac" | "autre" | "";
   chauffageConso?: string;
+  revenuFiscalRef?: string;
   leadId?: string;
   otpVerified?: boolean;
   otpStatus?: "pending" | "verified";
@@ -37,6 +38,7 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     email: "",
     chauffageType: "",
     chauffageConso: "",
+    revenuFiscalRef: "",
   });
   const [currentStep, setCurrentStep] = useState<FormStep>("pre");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +48,10 @@ export default function LeadForm({ travaux }: LeadFormProps) {
   const [submitError, setSubmitError] = useState<string>("");
   const [otpInfo, setOtpInfo] = useState<string>("");
   const [leadId, setLeadId] = useState<string>("");
+  const [adresseSuggestions, setAdresseSuggestions] = useState<string[]>([]);
+  const [codePostalSuggestions, setCodePostalSuggestions] = useState<string[]>([]);
+  const [isFetchingAdresse, setIsFetchingAdresse] = useState(false);
+  const [isFetchingCodePostal, setIsFetchingCodePostal] = useState(false);
   const isNotEligible =
     formData.statutOccupation === "locataire" || formData.typeLogement === "appartement";
 
@@ -73,6 +79,73 @@ export default function LeadForm({ travaux }: LeadFormProps) {
     requestAnimationFrame(scrollToSection);
     setTimeout(scrollToSection, 0);
   }, [currentStep]);
+
+  useEffect(() => {
+    const query = formData.adresse.trim();
+    if (query.length < 3) {
+      setAdresseSuggestions([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setIsFetchingAdresse(true);
+      try {
+        const response = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`
+        );
+        const data = await response.json();
+        const suggestions = Array.isArray(data.features)
+          ? data.features
+              .map((feature: any) => feature?.properties?.label)
+              .filter((label: string) => typeof label === "string")
+          : [];
+        setAdresseSuggestions(suggestions);
+      } catch {
+        setAdresseSuggestions([]);
+      } finally {
+        setIsFetchingAdresse(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [formData.adresse]);
+
+  useEffect(() => {
+    const query = formData.codePostal.trim();
+    if (query.length < 2) {
+      setCodePostalSuggestions([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setIsFetchingCodePostal(true);
+      try {
+        const response = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&type=municipality&limit=5`
+        );
+        const data = await response.json();
+        const suggestions = Array.isArray(data.features)
+          ? data.features
+              .map((feature: any) => {
+                const postcode = feature?.properties?.postcode;
+                const city = feature?.properties?.city || feature?.properties?.citycode;
+                if (!postcode) {
+                  return null;
+                }
+                return city ? `${postcode} ${city}` : `${postcode}`;
+              })
+              .filter((label: string | null) => typeof label === "string")
+          : [];
+        setCodePostalSuggestions(suggestions as string[]);
+      } catch {
+        setCodePostalSuggestions([]);
+      } finally {
+        setIsFetchingCodePostal(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [formData.codePostal]);
 
   const formatPhoneNumber = (value: string): string => {
     const cleaned = value.replace(/\D/g, "");
@@ -629,6 +702,27 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                   <p className="fr-hint-text">Montant moyen par mois (en €).</p>
                 </div>
 
+                <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
+                  <label className="fr-label" htmlFor="revenu-fiscal-ref">
+                    Revenu fiscal de référence <span className="fr-hint-text">(obligatoire)</span>
+                  </label>
+                  <input
+                    className="fr-input"
+                    type="text"
+                    id="revenu-fiscal-ref"
+                    name="revenuFiscalRef"
+                    value={formData.revenuFiscalRef}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
+                      setFormData({ ...formData, revenuFiscalRef: value });
+                    }}
+                    required
+                    inputMode="numeric"
+                    placeholder="Ex : 22500"
+                  />
+                  <p className="fr-hint-text">Indiqué sur votre avis d'impôt.</p>
+                </div>
+
                 {submitError && (
                   <div className="fr-alert fr-alert--error fr-mt-3w fr-mt-md-4w" role="alert">
                     <p>{submitError}</p>
@@ -653,7 +747,9 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                       isSubmitting ||
                       !formData.chauffageType ||
                       !formData.chauffageConso ||
-                      Number(formData.chauffageConso) <= 0
+                      Number(formData.chauffageConso) <= 0 ||
+                      !formData.revenuFiscalRef ||
+                      Number(formData.revenuFiscalRef) <= 0
                     }
                   >
                     {isSubmitting ? "Envoi en cours..." : "Continuer"}
@@ -744,6 +840,28 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                 <p className="fr-hint-text">
                   Format : 5 chiffres (exemple : 75001)
                 </p>
+                {isFetchingCodePostal && (
+                  <p className="fr-hint-text">Recherche en cours...</p>
+                )}
+                {codePostalSuggestions.length > 0 && (
+                  <ul className="suggestions-list" role="listbox">
+                    {codePostalSuggestions.map((suggestion) => (
+                      <li key={suggestion}>
+                        <button
+                          type="button"
+                          className="suggestion-item"
+                          onClick={() => {
+                            const postal = suggestion.split(" ")[0];
+                            setFormData({ ...formData, codePostal: postal });
+                            setCodePostalSuggestions([]);
+                          }}
+                        >
+                          {suggestion}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
@@ -761,6 +879,27 @@ export default function LeadForm({ travaux }: LeadFormProps) {
                   autoComplete="street-address"
                   placeholder="Numéro et nom de rue"
                 />
+                {isFetchingAdresse && (
+                  <p className="fr-hint-text">Recherche en cours...</p>
+                )}
+                {adresseSuggestions.length > 0 && (
+                  <ul className="suggestions-list" role="listbox">
+                    {adresseSuggestions.map((suggestion) => (
+                      <li key={suggestion}>
+                        <button
+                          type="button"
+                          className="suggestion-item"
+                          onClick={() => {
+                            setFormData({ ...formData, adresse: suggestion });
+                            setAdresseSuggestions([]);
+                          }}
+                        >
+                          {suggestion}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="fr-input-group fr-mt-3w fr-mt-md-4w">
